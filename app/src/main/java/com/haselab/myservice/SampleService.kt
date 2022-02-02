@@ -3,6 +3,7 @@ package com.haselab.myservice
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,7 +11,6 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.location.*
 
 private const val TAG = "Service"
@@ -44,7 +44,7 @@ class SampleService : Service() {
     }
 
     override fun onCreate() {
-        log.v(TAG,"onCreate start")
+        Log.v(TAG, "onCreate start")
         // 通知チャネル名をstrings.xmlから取得。
         val name = getString(R.string.notification_channel_name)
         // 通知チャネルの重要度を標準に設定。
@@ -55,6 +55,36 @@ class SampleService : Service() {
         val manager = getSystemService(NotificationManager::class.java)
         // 通知チャネルを設定。
         manager.createNotificationChannel(channel)
+
+
+        // Notificationを作成するBuilderクラス生成。
+        val builder = NotificationCompat.Builder(this@SampleService, CHANNEL_ID)
+        // 通知エリアに表示されるアイコンを設定。
+        builder.setSmallIcon(android.R.drawable.ic_dialog_info)
+        // 通知ドロワーでの表示タイトルを設定。
+        builder.setContentTitle("msg title")
+        // 通知ドロワーでの表示メッセージを設定。
+        builder.setContentText("hmm")
+
+        // 起動先Activityクラスを指定したIntentオブジェクトを生成。
+        val intent = Intent(this@SampleService, MainActivity::class.java)
+        // 起動先アクティビティに引き継ぎデータを格納。
+        intent.putExtra("fromNotification", true)
+        // PendingIntentオブジェクトを取得。
+        val stopServiceIntent = PendingIntent.getActivity(this@SampleService,
+            0,
+            intent,
+            PendingIntent.FLAG_CANCEL_CURRENT)
+        // PendingIntentオブジェクトをビルダーに設定。
+        builder.setContentIntent(stopServiceIntent)
+        // タップされた通知メッセージを自動的に消去するように設定。
+        builder.setAutoCancel(true)
+
+        // BuilderからNotificationオブジェクトを生成。
+        val notification = builder.build()
+        // Notificationオブジェクトを元にサービスをフォアグラウンド化。
+        startForeground(200, notification)
+
 
         _fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         _locationRequest = LocationRequest.create()
@@ -70,47 +100,26 @@ class SampleService : Service() {
                 this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.v(TAG,"permission check error" )
-            msgPermissionError()
+            Log.v(TAG, "permission check error")
+            stopSelf()
             return
         }
         Log.v(TAG, "permission ok")
         _fusedLocationClient.requestLocationUpdates(_locationRequest, _onUpdateLocation, mainLooper)
     }
 
-
-    private fun msg() {
-        Log.v(TAG,"msg start")
-
-        // Notificationを作成するBuilderクラス生成。
-        val builder = NotificationCompat.Builder(this@SampleService, CHANNEL_ID)
-        // 通知エリアに表示されるアイコンを設定。
-        builder.setSmallIcon(android.R.drawable.ic_dialog_info)
-        // 通知ドロワーでの表示タイトルを設定。
-        builder.setContentTitle("error Permission")
-        // 通知ドロワーでの表示メッセージを設定。
-        builder.setContentText("need permission")
-        // BuilderからNotificationオブジェクトを生成。
-        val notification = builder.build()
-        // NotificationManagerCompatオブジェクトを取得。
-        val manager = NotificationManagerCompat.from(this@SampleService)
-        // 通知。
-        manager.notify(100, notification)
-        stopSelf()
-    }
-
     override fun onBind(intent: Intent): IBinder {
-        Log.v(TAG,"onBind")
+        Log.v(TAG, "onBind")
         TODO("Return the communication channel to the service.")
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        Log.v(TAG,"onStartCommand")
+        Log.v(TAG, "onStartCommand")
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
-        Log.v(TAG,"onDestory")
+        Log.v(TAG, "onDestroy")
         super.onDestroy()
         _fusedLocationClient.removeLocationUpdates(_onUpdateLocation)
 
