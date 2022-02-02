@@ -15,6 +15,7 @@ class SampleService : Service() {
     }
 
     override fun onCreate() {
+        log.v(TAG,"onCreate start")
         // 通知チャネル名をstrings.xmlから取得。
         val name = getString(R.string.notification_channel_name)
         // 通知チャネルの重要度を標準に設定。
@@ -28,7 +29,7 @@ class SampleService : Service() {
     }
 
     private fun msg() {
-        Log.v("aaa","msg start")
+        Log.v(TAG,"msg start")
 
         // Notificationを作成するBuilderクラス生成。
         val builder = NotificationCompat.Builder(this@SampleService, CHANNEL_ID)
