@@ -19,6 +19,8 @@ class MainActivity() : AppCompatActivity(), Parcelable {
 
     constructor(parcel: Parcel) : this()
 
+ 	private val _helper = DatabaseHelper(this@MainActivity)
+
     override fun onRequestPermissionsResult(
 		requestCode: Int,
 		permissions: Array<out String>,
@@ -34,7 +36,7 @@ class MainActivity() : AppCompatActivity(), Parcelable {
             Log.v(TAG, " not GRANTED ")
             AlertDialog.Builder(this)
                 .setMessage(" need location permission")
-                .setPositiveButton("OK", { _, which ->
+                .setPositiveButton("OK", { _, _ ->
                     finish()
                 }).show()
             return
@@ -106,4 +108,11 @@ class MainActivity() : AppCompatActivity(), Parcelable {
             return arrayOfNulls(size)
         }
     }
+
+    override fun onDestroy() {
+	_helper.close()
+    super.onDestroy()
+	    }
+
+
 }

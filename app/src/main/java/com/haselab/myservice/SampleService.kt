@@ -26,6 +26,8 @@ class SampleService : Service() {
     private lateinit var _locationRequest: LocationRequest
     private lateinit var _onUpdateLocation: OnUpdateLocation
 
+    private val _helper = DatabaseHelper(this)
+
     private inner class OnUpdateLocation : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             Log.v(TAG, "start onLocationResult")
@@ -38,9 +40,23 @@ class SampleService : Service() {
                     val text2 = _longitude.toString()
                     Log.v(TAG, "latitude = $text")
                     Log.v(TAG, "longitude = $text2")
+                    writeDb()
                 }
             }
         }
+    }
+
+    private fun writeDb() {
+        Log.v(TAG,"writeDB")
+        val sqlInsert = "INSERT INTO location ( time, lat, lon) VALUES (?, ?, ?)"
+        val db = _helper.writableDatabase
+        val stmt = db.compileStatement(sqlInsert)
+
+        stmt.bindLong(1, System.currentTimeMillis())
+        stmt.bindDouble(2, _latitude)
+        stmt.bindDouble(3, _longitude)
+        // インサートSQLの実行。
+        stmt.executeInsert()
     }
 
     override fun onCreate() {
@@ -120,9 +136,9 @@ class SampleService : Service() {
 
     override fun onDestroy() {
         Log.v(TAG, "onDestroy")
-        super.onDestroy()
         _fusedLocationClient.removeLocationUpdates(_onUpdateLocation)
-
+        // ヘルパーオブジェクトの解放。
+        _helper.close()
+        super.onDestroy()
     }
-
 }
