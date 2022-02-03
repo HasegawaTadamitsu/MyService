@@ -12,6 +12,8 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 private const val TAG = "Service"
 
@@ -46,17 +48,24 @@ class SampleService : Service() {
         }
     }
 
+    val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+
     private fun writeDb() {
-        Log.v(TAG,"writeDB")
+        Log.v(TAG, "writeDB")
         val sqlInsert = "INSERT INTO location ( time, lat, lon) VALUES (?, ?, ?)"
         val db = _helper.writableDatabase
+        db.beginTransaction()
         val stmt = db.compileStatement(sqlInsert)
-
-        stmt.bindLong(1, System.currentTimeMillis())
+        val currentTimeMillis = System.currentTimeMillis()
+        val date = Date(currentTimeMillis)
+        Log.v(TAG, "${df.format(date.time)}")
+        stmt.bindLong(1, currentTimeMillis)
         stmt.bindDouble(2, _latitude)
         stmt.bindDouble(3, _longitude)
-        // インサートSQLの実行。
         stmt.executeInsert()
+
+        db.setTransactionSuccessful()
+        db.endTransaction()
     }
 
     override fun onCreate() {

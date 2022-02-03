@@ -7,4 +7,5 @@
     <string name="msg_notification_text_start">test msg</string>
     <string name="msg_notification_title_finish">msg[</string>
     <string name="msg_notification_text_finish">text</string>
+    <string name="bt_reload">RELOAD</string>
 </resources>

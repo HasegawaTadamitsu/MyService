@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="match_parent"
-	android:layout_height="match_parent"
-	android:orientation="vertical">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-	<Button
-		android:id="@+id/btStartStop"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:onClick="onBtStartStopClick"
-		android:text="@string/bt_play_play"/>
+    <Button
+        android:id="@+id/btStartStop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onBtStartStopClick" />
+
+    <Button
+        android:id="@+id/btReload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onBtReloadClick"
+        android:text="@string/bt_reload" />
+
+    <ListView
+        android:id="@+id/lvLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

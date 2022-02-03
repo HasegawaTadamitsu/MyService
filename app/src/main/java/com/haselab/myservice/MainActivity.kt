@@ -1,17 +1,27 @@
 package com.haselab.myservice
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.Cursor
+import android.net.Uri
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Log
 import android.view.View
+import android.widget.AdapterView
 import android.widget.Button
+import android.widget.ListView
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.cursoradapter.widget.SimpleCursorAdapter
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 private const val TAG = "MainActivity"
 
@@ -20,9 +30,9 @@ class MainActivity() : AppCompatActivity(), Parcelable {
     constructor(parcel: Parcel) : this(
     )
 
-    private  val btStartStopLabelStart = "START"
-    private  val btStartStopLabelStop = "Stop"
-
+    private val btStartStopLabelStart = "START"
+    private val btStartStopLabelStop = "Stop"
+    private val _helper = DatabaseHelper(this)
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -55,7 +65,7 @@ class MainActivity() : AppCompatActivity(), Parcelable {
 
         val fromNotification = intent.getBooleanExtra("fromNotification", false)
         if (fromNotification) {
-            Log.v(TAG,"fromNotification")
+            Log.v(TAG, "fromNotification")
             stopService(intent)
             setLabelBtStartStop(btStartStopLabelStart)
         }
@@ -69,7 +79,8 @@ class MainActivity() : AppCompatActivity(), Parcelable {
             ActivityCompat.requestPermissions(this, permissions, 1000)
             return
         }
-
+        val view = findViewById<View>(R.id.btReload) as View
+        onBtReloadClick(view)
     }
 
     private fun setLabelBtStartStop(label: String) {
@@ -88,6 +99,78 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         Log.v(TAG, "button is false")
         return false
     }
+
+    fun onBtReloadClick(view: View) {
+        Log.v(TAG, "start onBtReloadClick")
+        val db = _helper.readableDatabase
+        val columns = arrayOf("_id", "time", "lat", "lon")
+        val cursor = db.query("location", columns, null, null,
+            null, null, "time desc")
+
+        val headers = arrayOf("_id", "time", "lat", "lon")
+        val layouts = intArrayOf(R.id.id, R.id.time, R.id.lat, R.id.lon)
+
+        val adapter = SimpleCursorAdapter(this,
+            R.layout.row_main,
+            cursor,
+            headers,
+            layouts,
+            SimpleCursorAdapter.FLAG_AUTO_REQUERY)
+        val listView = findViewById<View>(R.id.lvLocation) as ListView
+
+        listView.onItemClickListener = ListViewClicker()
+        adapter.viewBinder = ListBinder()
+        listView.adapter = adapter
+        db.close()
+    }
+
+    private inner class ListViewClicker : AdapterView.OnItemClickListener {
+        override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
+            Log.v(TAG, "onClick ${id},${position}")
+            val timeTextView = view.findViewById(R.id.time) as TextView
+            Log.v(TAG, "${timeTextView.text}")
+            val latTextView = view.findViewById(R.id.lat) as TextView
+            val lat = latTextView.text
+            Log.v(TAG, "${lat}")
+            val lonTextView = view.findViewById(R.id.lon) as TextView
+            val lon = lonTextView.text
+            Log.v(TAG, "${lon}")
+            val uri = Uri.parse ("geo:${lat},${lon}")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            startActivity(intent)
+        }
+    }
+
+    private inner class ListBinder : SimpleCursorAdapter.ViewBinder {
+        @SuppressLint("SimpleDateFormat")
+        val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+        override fun setViewValue(view: View?, cursor: Cursor?, columnIndex: Int): Boolean {
+            when (columnIndex) {
+                0 -> { // _id  dummy
+                }
+                1 -> {  // time
+                    val tmpView = view as TextView
+                    val date = Date(cursor!!.getLong(columnIndex))
+                    tmpView.text = df.format(date.time)
+                    return true
+                }
+                2 -> {  // "lat"
+                    val tmpView = view as TextView
+                    tmpView.text = cursor!!.getDouble(columnIndex).toString()
+                    return true
+                }
+                3 -> {  // "lon"
+                    val tmpView = view as TextView
+                    tmpView.text = cursor!!.getDouble(columnIndex).toString()
+                    return true
+                }
+                else -> {}
+            }
+            return false
+        }
+
+    }
+
 
     fun onBtStartStopClick(view: View) {
         Log.v(TAG, "start onBtStartStopClick")
@@ -118,5 +201,9 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        _helper.close()
+    }
 }
 
