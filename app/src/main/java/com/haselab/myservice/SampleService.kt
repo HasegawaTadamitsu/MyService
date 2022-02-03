@@ -48,7 +48,7 @@ class SampleService : Service() {
         }
     }
 
-    val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+    private val df = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
 
     private fun writeDb() {
         Log.v(TAG, "writeDB")
@@ -87,9 +87,9 @@ class SampleService : Service() {
         // 通知エリアに表示されるアイコンを設定。
         builder.setSmallIcon(android.R.drawable.ic_dialog_info)
         // 通知ドロワーでの表示タイトルを設定。
-        builder.setContentTitle("msg title")
+        builder.setContentTitle(getResources().getString(R.string.notifi_title))
         // 通知ドロワーでの表示メッセージを設定。
-        builder.setContentText("hmm")
+        builder.setContentText(getResources().getString(R.string.notifi_text))
 
         // 起動先Activityクラスを指定したIntentオブジェクトを生成。
         val intent = Intent(this@SampleService, MainActivity::class.java)
@@ -146,7 +146,6 @@ class SampleService : Service() {
     override fun onDestroy() {
         Log.v(TAG, "onDestroy")
         _fusedLocationClient.removeLocationUpdates(_onUpdateLocation)
-        // ヘルパーオブジェクトの解放。
         _helper.close()
         super.onDestroy()
     }

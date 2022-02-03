@@ -67,7 +67,8 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         if (fromNotification) {
             Log.v(TAG, "fromNotification")
             stopService(intent)
-            setLabelBtStartStop(btStartStopLabelStart)
+            startService(intent)
+            setLabelBtStartStop(btStartStopLabelStop)
         }
 
         if (ActivityCompat.checkSelfPermission(
@@ -79,7 +80,7 @@ class MainActivity() : AppCompatActivity(), Parcelable {
             ActivityCompat.requestPermissions(this, permissions, 1000)
             return
         }
-        val view = findViewById<View>(R.id.btReload) as View
+        val view = findViewById<View>(R.id.btReload)
         onBtReloadClick(view)
     }
 
@@ -131,10 +132,10 @@ class MainActivity() : AppCompatActivity(), Parcelable {
             Log.v(TAG, "${timeTextView.text}")
             val latTextView = view.findViewById(R.id.lat) as TextView
             val lat = latTextView.text
-            Log.v(TAG, "${lat}")
+            Log.v(TAG, "$lat")
             val lonTextView = view.findViewById(R.id.lon) as TextView
             val lon = lonTextView.text
-            Log.v(TAG, "${lon}")
+            Log.v(TAG, "$lon")
             val uri = Uri.parse ("geo:${lat},${lon}")
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
