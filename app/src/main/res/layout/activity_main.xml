@@ -6,17 +6,10 @@
 	android:orientation="vertical">
 
 	<Button
-		android:id="@+id/btPlay"
+		android:id="@+id/btStartStop"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:onClick="onPlayButtonClick"
+		android:onClick="onBtStartStopClick"
 		android:text="@string/bt_play_play"/>
 
-	<Button
-		android:id="@+id/btStop"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:enabled="false"
-		android:onClick="onStopButtonClick"
-		android:text="@string/bt_play_stop"/>
 </LinearLayout>

@@ -101,7 +101,7 @@ class SampleService : Service() {
         // Notificationオブジェクトを元にサービスをフォアグラウンド化。
         startForeground(200, notification)
 
-
+        // init location
         _fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         _locationRequest = LocationRequest.create()
         _locationRequest.let {
@@ -110,18 +110,6 @@ class SampleService : Service() {
             it.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
         _onUpdateLocation = OnUpdateLocation()
-        Log.v(TAG, "permission check")
-        if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.v(TAG, "permission check error")
-            stopSelf()
-            return
-        }
-        Log.v(TAG, "permission ok")
-        _fusedLocationClient.requestLocationUpdates(_locationRequest, _onUpdateLocation, mainLooper)
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -131,6 +119,18 @@ class SampleService : Service() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         Log.v(TAG, "onStartCommand")
+
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.v(TAG, "permission check error")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        Log.v(TAG, "permission ok")
+        _fusedLocationClient.requestLocationUpdates(_locationRequest, _onUpdateLocation, mainLooper)
         return START_NOT_STICKY
     }
 

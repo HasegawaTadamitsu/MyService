@@ -17,15 +17,18 @@ private const val TAG = "MainActivity"
 
 class MainActivity() : AppCompatActivity(), Parcelable {
 
-    constructor(parcel: Parcel) : this()
+    constructor(parcel: Parcel) : this(
+    )
 
- 	private val _helper = DatabaseHelper(this@MainActivity)
+    private  val btStartStopLabelStart = "START"
+    private  val btStartStopLabelStop = "Stop"
+
 
     override fun onRequestPermissionsResult(
-		requestCode: Int,
-		permissions: Array<out String>,
-		grantResults: IntArray,
-	) {
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Log.v(TAG, "dialog$requestCode $grantResults[0]")
         if (requestCode != 1000) {
@@ -36,9 +39,9 @@ class MainActivity() : AppCompatActivity(), Parcelable {
             Log.v(TAG, " not GRANTED ")
             AlertDialog.Builder(this)
                 .setMessage(" need location permission")
-                .setPositiveButton("OK", { _, _ ->
+                .setPositiveButton("OK") { _, _ ->
                     finish()
-                }).show()
+                }.show()
             return
         }
         Log.v("permission", "ok")
@@ -46,15 +49,15 @@ class MainActivity() : AppCompatActivity(), Parcelable {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
+        setLabelBtStartStop(btStartStopLabelStart)
 
         val fromNotification = intent.getBooleanExtra("fromNotification", false)
-
         if (fromNotification) {
-            val btPlay = findViewById<Button>(R.id.btPlay)
-            val btStop = findViewById<Button>(R.id.btStop)
-            btPlay.isEnabled = false
-            btStop.isEnabled = true
+            Log.v(TAG,"fromNotification")
+            stopService(intent)
+            setLabelBtStartStop(btStartStopLabelStart)
         }
 
         if (ActivityCompat.checkSelfPermission(
@@ -69,30 +72,36 @@ class MainActivity() : AppCompatActivity(), Parcelable {
 
     }
 
-    fun onPlayButtonClick(view: View) {
-        val intent = Intent(this@MainActivity, SampleService::class.java)
-
-        startService(intent)
-
-        val btPlay = findViewById<Button>(R.id.btPlay)
-        val btStop = findViewById<Button>(R.id.btStop)
-        btPlay.isEnabled = false
-        btStop.isEnabled = true
+    private fun setLabelBtStartStop(label: String) {
+        Log.v(TAG, "start setLabelBtStartStop to $label")
+        val btStartStop = findViewById<Button>(R.id.btStartStop)
+        btStartStop.text = label
     }
 
-    fun onStopButtonClick(view: View) {
+    private fun isStartBtStartStop(): Boolean {
+        Log.v(TAG, "start isStartBtStartStop")
+        val btStartStop = findViewById<Button>(R.id.btStartStop)
+        if (btStartStop.text == btStartStopLabelStart) {
+            Log.v(TAG, "button is START(true)")
+            return true
+        }
+        Log.v(TAG, "button is false")
+        return false
+    }
+
+    fun onBtStartStopClick(view: View) {
+        Log.v(TAG, "start onBtStartStopClick")
         val intent = Intent(this@MainActivity, SampleService::class.java)
-
-        stopService(intent)
-
-        val btPlay = findViewById<Button>(R.id.btPlay)
-        val btStop = findViewById<Button>(R.id.btStop)
-        btPlay.isEnabled = true
-        btStop.isEnabled = false
+        if (isStartBtStartStop()) {
+            startService(intent)
+            setLabelBtStartStop(btStartStopLabelStop)
+        } else {
+            stopService(intent)
+            setLabelBtStartStop(btStartStopLabelStart)
+        }
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-
     }
 
     override fun describeContents(): Int {
@@ -109,10 +118,5 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         }
     }
 
-    override fun onDestroy() {
-	_helper.close()
-    super.onDestroy()
-	    }
-
-
 }
+
