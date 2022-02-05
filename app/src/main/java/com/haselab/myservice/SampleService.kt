@@ -1,13 +1,12 @@
 package com.haselab.myservice
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -15,11 +14,12 @@ import com.google.android.gms.location.*
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 private const val TAG = "Service"
 
 class SampleService : Service() {
     companion object {
-        private const val CHANNEL_ID = "SampleService_notification_channel"
+        const val CHANNEL_ID = "SampleService_notification_channel"
     }
 
     private var _latitude = 0.0
@@ -33,6 +33,7 @@ class SampleService : Service() {
     private inner class OnUpdateLocation : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             Log.v(TAG, "start onLocationResult")
+            super.onLocationResult(locationResult)
             locationResult.let { itx ->
                 val location = itx.lastLocation
                 location.let {
@@ -70,55 +71,6 @@ class SampleService : Service() {
 
     override fun onCreate() {
         Log.v(TAG, "onCreate start")
-        // 通知チャネル名をstrings.xmlから取得。
-        val name = getString(R.string.notification_channel_name)
-        // 通知チャネルの重要度を標準に設定。
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
-        // 通知チャネルを生成。
-        val channel = NotificationChannel(CHANNEL_ID, name, importance)
-        // NotificationManagerオブジェクトを取得。
-        val manager = getSystemService(NotificationManager::class.java)
-        // 通知チャネルを設定。
-        manager.createNotificationChannel(channel)
-
-
-        // Notificationを作成するBuilderクラス生成。
-        val builder = NotificationCompat.Builder(this@SampleService, CHANNEL_ID)
-        // 通知エリアに表示されるアイコンを設定。
-        builder.setSmallIcon(android.R.drawable.ic_dialog_info)
-        // 通知ドロワーでの表示タイトルを設定。
-        builder.setContentTitle(getResources().getString(R.string.notifi_title))
-        // 通知ドロワーでの表示メッセージを設定。
-        builder.setContentText(getResources().getString(R.string.notifi_text))
-
-        // 起動先Activityクラスを指定したIntentオブジェクトを生成。
-        val intent = Intent(this@SampleService, MainActivity::class.java)
-        // 起動先アクティビティに引き継ぎデータを格納。
-        intent.putExtra("fromNotification", true)
-        // PendingIntentオブジェクトを取得。
-        val stopServiceIntent = PendingIntent.getActivity(this@SampleService,
-            0,
-            intent,
-            PendingIntent.FLAG_CANCEL_CURRENT)
-        // PendingIntentオブジェクトをビルダーに設定。
-        builder.setContentIntent(stopServiceIntent)
-        // タップされた通知メッセージを自動的に消去するように設定。
-        builder.setAutoCancel(true)
-
-        // BuilderからNotificationオブジェクトを生成。
-        val notification = builder.build()
-        // Notificationオブジェクトを元にサービスをフォアグラウンド化。
-        startForeground(200, notification)
-
-        // init location
-        _fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        _locationRequest = LocationRequest.create()
-        _locationRequest.let {
-            it.interval = 5000 // milli sec
-            it.fastestInterval = 1000 // mill sec
-            it.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
-        _onUpdateLocation = OnUpdateLocation()
     }
 
     override fun onBind(intent: Intent): IBinder {
@@ -128,6 +80,37 @@ class SampleService : Service() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         Log.v(TAG, "onStartCommand")
+        super.onStartCommand(intent, flags, startId)
+
+        val myIntent = Intent(this@SampleService, MainActivity::class.java)
+            .putExtra("fromNotification", true)
+        val stopServiceIntent = PendingIntent.getActivity(this@SampleService,
+            0,
+            myIntent,
+            PendingIntent.FLAG_CANCEL_CURRENT)
+
+
+        val builder = NotificationCompat.Builder(this@SampleService, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(resources.getString(R.string.notifi_title))
+            .setContentText(resources.getString(R.string.notifi_text))
+            .setContentIntent(stopServiceIntent)
+            .setAutoCancel(true)
+
+        val notification = builder.build()
+        startForeground(9999, notification)
+
+        // init location
+        _fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        _locationRequest = LocationRequest.create()
+        _locationRequest.let {
+            it.interval = 10000 // milli sec
+            it.fastestInterval = 10000 // mill sec
+            it.maxWaitTime = 5000 // mill sec
+            it.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+        _onUpdateLocation = OnUpdateLocation()
+
 
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
@@ -139,8 +122,8 @@ class SampleService : Service() {
             return START_NOT_STICKY
         }
         Log.v(TAG, "permission ok")
-        _fusedLocationClient.requestLocationUpdates(_locationRequest, _onUpdateLocation, mainLooper)
-        return START_NOT_STICKY
+        _fusedLocationClient.requestLocationUpdates(_locationRequest, _onUpdateLocation, Looper.getMainLooper())
+        return START_STICKY
     }
 
     override fun onDestroy() {

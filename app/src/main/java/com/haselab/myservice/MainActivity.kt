@@ -2,6 +2,9 @@ package com.haselab.myservice
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
@@ -61,15 +64,28 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
-        setLabelBtStartStop(btStartStopLabelStart)
+        val channel = NotificationChannel(
+            SampleService.CHANNEL_ID, "Location Get Sample",
+            NotificationManager.IMPORTANCE_MIN
+        )
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(channel)
+
+        val serviceIntent = Intent(this@MainActivity, SampleService::class.java)
 
         val fromNotification = intent.getBooleanExtra("fromNotification", false)
         if (fromNotification) {
-            Log.v(TAG, "fromNotification")
-            stopService(intent)
-            startService(intent)
+            Log.v(TAG, "from SampleService (Notification)")
+            stopService(serviceIntent)
+            startService(serviceIntent)
             setLabelBtStartStop(btStartStopLabelStop)
+        } else {
+            Log.v(TAG, "no fromNotification")
+            stopService(serviceIntent)
+            setLabelBtStartStop(btStartStopLabelStart)
         }
+        val view = findViewById<View>(R.id.btReload)
+        onBtReloadClick(view)
 
         if (ActivityCompat.checkSelfPermission(
                 this,
@@ -80,8 +96,8 @@ class MainActivity() : AppCompatActivity(), Parcelable {
             ActivityCompat.requestPermissions(this, permissions, 1000)
             return
         }
-        val view = findViewById<View>(R.id.btReload)
-        onBtReloadClick(view)
+        Log.v(TAG, "permission ok")
+
     }
 
     private fun setLabelBtStartStop(label: String) {
@@ -94,10 +110,10 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         Log.v(TAG, "start isStartBtStartStop")
         val btStartStop = findViewById<Button>(R.id.btStartStop)
         if (btStartStop.text == btStartStopLabelStart) {
-            Log.v(TAG, "button is START(true)")
+            Log.v(TAG, "button label is START(true)")
             return true
         }
-        Log.v(TAG, "button is false")
+        Log.v(TAG, "button label is STOP(false)")
         return false
     }
 
@@ -136,7 +152,7 @@ class MainActivity() : AppCompatActivity(), Parcelable {
             val lonTextView = view.findViewById(R.id.lon) as TextView
             val lon = lonTextView.text
             Log.v(TAG, "$lon")
-            val uri = Uri.parse ("geo:${lat},${lon}")
+            val uri = Uri.parse("geo:${lat},${lon}")
             val intent = Intent(Intent.ACTION_VIEW, uri)
             startActivity(intent)
         }
@@ -172,15 +188,15 @@ class MainActivity() : AppCompatActivity(), Parcelable {
 
     }
 
-
     fun onBtStartStopClick(view: View) {
         Log.v(TAG, "start onBtStartStopClick")
-        val intent = Intent(this@MainActivity, SampleService::class.java)
+        val intentSampleService = Intent(this@MainActivity, SampleService::class.java)
         if (isStartBtStartStop()) {
-            startService(intent)
+            startForegroundService(intentSampleService)
             setLabelBtStartStop(btStartStopLabelStop)
+            finish()
         } else {
-            stopService(intent)
+            stopService(intentSampleService)
             setLabelBtStartStop(btStartStopLabelStart)
         }
     }
