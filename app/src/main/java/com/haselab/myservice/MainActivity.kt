@@ -30,12 +30,12 @@ private const val TAG = "MainActivity"
 
 class MainActivity() : AppCompatActivity(), Parcelable {
 
-    constructor(parcel: Parcel) : this(
-    )
-
     private val btStartStopLabelStart = "START"
     private val btStartStopLabelStop = "Stop"
     private val _helper = DatabaseHelper(this)
+
+    constructor(parcel: Parcel) : this() {
+    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -202,10 +202,16 @@ class MainActivity() : AppCompatActivity(), Parcelable {
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
+
     }
 
     override fun describeContents(): Int {
         return 0
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _helper.close()
     }
 
     companion object CREATOR : Parcelable.Creator<MainActivity> {
@@ -216,11 +222,6 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         override fun newArray(size: Int): Array<MainActivity?> {
             return arrayOfNulls(size)
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        _helper.close()
     }
 }
 
