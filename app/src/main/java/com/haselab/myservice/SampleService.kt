@@ -92,8 +92,8 @@ class SampleService : Service() {
 
         val builder = NotificationCompat.Builder(this@SampleService, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(resources.getString(R.string.notifi_title))
-            .setContentText(resources.getString(R.string.notifi_text))
+            .setContentTitle(resources.getString(R.string.notification_title))
+            .setContentText(resources.getString(R.string.notification_text))
             .setContentIntent(stopServiceIntent)
             .setAutoCancel(true)
 

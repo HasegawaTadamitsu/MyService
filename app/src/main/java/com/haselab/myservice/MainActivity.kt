@@ -2,6 +2,7 @@ package com.haselab.myservice
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -34,8 +35,7 @@ class MainActivity() : AppCompatActivity(), Parcelable {
     private val btStartStopLabelStop = "Stop"
     private val _helper = DatabaseHelper(this)
 
-    constructor(parcel: Parcel) : this() {
-    }
+    constructor(parcel: Parcel) : this()
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -61,6 +61,7 @@ class MainActivity() : AppCompatActivity(), Parcelable {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.v(TAG, "start onCreate")
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
@@ -73,17 +74,14 @@ class MainActivity() : AppCompatActivity(), Parcelable {
 
         val serviceIntent = Intent(this@MainActivity, SampleService::class.java)
 
-        val fromNotification = intent.getBooleanExtra("fromNotification", false)
-        if (fromNotification) {
-            Log.v(TAG, "from SampleService (Notification)")
-            stopService(serviceIntent)
-            startService(serviceIntent)
+        if (isRunningService()) {
+            Log.v(TAG, "running  service ")
             setLabelBtStartStop(btStartStopLabelStop)
         } else {
-            Log.v(TAG, "no fromNotification")
-            stopService(serviceIntent)
+            Log.v(TAG, "not running  service ")
             setLabelBtStartStop(btStartStopLabelStart)
         }
+
         val view = findViewById<View>(R.id.btReload)
         onBtReloadClick(view)
 
@@ -98,6 +96,18 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         }
         Log.v(TAG, "permission ok")
 
+    }
+
+    private fun isRunningService(): Boolean {
+        Log.v(TAG, "start isRunningService ")
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        manager.getRunningServices(Integer.MAX_VALUE).forEach { serviceInfo ->
+            if (SampleService::class.java.name == (serviceInfo.service.className)) {
+                Log.v(TAG, "${SampleService::class.java.name} == ${serviceInfo.service.className}")
+                return true
+            }
+        }
+        return false
     }
 
     private fun setLabelBtStartStop(label: String) {
@@ -222,6 +232,12 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         override fun newArray(size: Int): Array<MainActivity?> {
             return arrayOfNulls(size)
         }
+    }
+
+    fun onBtQuit(view: View) {
+        val intentSampleService = Intent(this@MainActivity, SampleService::class.java)
+        stopService(intentSampleService)
+        finish()
     }
 }
 
