@@ -29,7 +29,7 @@ import java.util.*
 
 private const val TAG = "MainActivity"
 
-class MainActivity() : AppCompatActivity(), Parcelable {
+class MainActivity() : AppCompatActivity(), Parcelable,MsgWriteCallback {
 
     private val btStartStopLabelStart = "START"
     private val btStartStopLabelStop = "Stop"
@@ -71,8 +71,6 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         )
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.createNotificationChannel(channel)
-
-        val serviceIntent = Intent(this@MainActivity, SampleService::class.java)
 
         if (isRunningService()) {
             Log.v(TAG, "running  service ")
@@ -215,6 +213,17 @@ class MainActivity() : AppCompatActivity(), Parcelable {
 
     }
 
+    private val _httpTask= HttpTask(this)
+    override fun onResume() {
+        Log.v(TAG,"start onResume")
+        super.onResume()
+        if (!_httpTask.isRunning()){
+            Log.v(TAG,"start httpTask")
+            _httpTask.execute()
+        }
+    }
+
+
     override fun describeContents(): Int {
         return 0
     }
@@ -239,5 +248,14 @@ class MainActivity() : AppCompatActivity(), Parcelable {
         stopService(intentSampleService)
         finish()
     }
+
+    override fun doWrite(str: String) {
+        val msg = findViewById<TextView>(R.id.tvMsg)
+        msg.text = str
+    }
 }
 
+
+interface MsgWriteCallback {
+    fun doWrite(str: String)
+}
