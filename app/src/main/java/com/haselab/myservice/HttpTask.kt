@@ -112,21 +112,21 @@ class AsyncRunnable(private val _msgCallBack: MsgWriteCallback) : Runnable {
             Log.v(TAG, "doExecuteConnect code $code")
 
             if (code != 200) {
-                return "${Command.ERROR.string()},unknown code ${code}"
+                return "${Command.ERROR.str},unknown code ${code}"
             }
             if (response.body != null) {
                 return response.body!!.string()
             }
-            return "${Command.ERROR.string()},body is null"
+            return "${Command.ERROR.str},body is null"
         } catch (e: TimeoutException) {
             Log.e(TAG, "$e")
-            return "${Command.ERROR.string()},$e"
+            return "${Command.ERROR.str},$e"
         } catch (e: UnknownHostException) {
             Log.e(TAG, "$e")
-            return "${Command.ERROR.string()},$e"
+            return "${Command.ERROR.str},$e"
         } catch (e: Exception) {
             Log.e(TAG, "$e")
-            return "${Command.ERROR.string()},$e"
+            return "${Command.ERROR.str},$e"
         }
     }
 
@@ -140,34 +140,13 @@ class AsyncRunnable(private val _msgCallBack: MsgWriteCallback) : Runnable {
         val cmd = tmp.first
         val opt = tmp.second
         Log.v(TAG, "CMD ${cmd} ,OPT ${opt}")
-        when (cmd) {
-            Command.ERROR.string() -> {
-                Command.ERROR.execute(_msgCallBack, opt)
-            }
-            Command.SET_MSG.string() -> {
-                Command.SET_MSG.execute(_msgCallBack, opt)
-            }
-            Command.BG.string() -> {
-                Command.BG.execute(_msgCallBack, opt)
-            }
-            Command.FIN.string() -> {
-                Command.FIN.execute(_msgCallBack, opt)
-            }
-            Command.START_GPS.string() -> {
-                Command.START_GPS.execute(_msgCallBack, opt)
-            }
-            Command.STOP_GPS.string() -> {
-                Command.STOP_GPS.execute(_msgCallBack, opt)
-            }
-            Command.SET_MSG.string() -> {
-                Command.SET_MSG.execute(_msgCallBack, opt)
-            }
-            Command.UPLOAD_DBFILE.string() -> {
-                Command.UPLOAD_DBFILE.execute(_msgCallBack, opt)
-            }
-            else -> {
-                _msgCallBack.setServerMsg("other $cmd _  $opt")
-            }
+        try {
+            val definedCommand = Command.values().first { it.str == cmd }
+            Log.v(TAG, "hit ${definedCommand.str}")
+            definedCommand.execute(_msgCallBack, opt)
+        } catch (e: java.util.NoSuchElementException) {
+            Log.v(TAG, "${e}")
+            _msgCallBack.setServerMsg("other $cmd _  $opt")
         }
     }
 
@@ -177,7 +156,7 @@ class AsyncRunnable(private val _msgCallBack: MsgWriteCallback) : Runnable {
         }
         val index = str.indexOf(",")
         if (index == -1) {
-            return "${Command.ERROR.string()}" to str
+            return Command.ERROR.str to str
         }
         val cmd = str.take(index)
         val opt = str.substring(index + 1)

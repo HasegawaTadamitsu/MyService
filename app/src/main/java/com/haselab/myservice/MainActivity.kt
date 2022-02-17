@@ -298,8 +298,10 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
     override fun uploadDBFile() {
         Log.v(TAG, "start uploadFBFile")
         val dbFilePath= this.getDatabasePath(DatabaseHelper.DATABASE_NAME)
-        Log.v(TAG, "db = ${dbFilePath}")
-        setServerMsg("uploading ${dbFilePath}")
+        Log.v(TAG, "db = $dbFilePath")
+        setServerMsg("uploading $dbFilePath")
+
+
     }
 }
 
