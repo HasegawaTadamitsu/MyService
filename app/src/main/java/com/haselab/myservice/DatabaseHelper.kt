@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
+import java.io.StringBufferInputStream
 
 private const val TAG = "DatabaseHelper"
 
@@ -15,7 +16,7 @@ class DatabaseHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NAME,
 		/**
 		 * データベースファイル名の定数フィールド。
 		 */
-		private const val DATABASE_NAME = "MyServiceLocation.db"
+		const val DATABASE_NAME = "MyServiceLocation.db"
 		/**
 		 * バージョン情報の定数フィールド。
 		 */
@@ -41,4 +42,5 @@ class DatabaseHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NAME,
 	override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
 		Log.v(TAG,"onUpgrade")
 	}
+
 }

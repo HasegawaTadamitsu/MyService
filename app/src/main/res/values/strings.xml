@@ -3,10 +3,12 @@
     <string name="notification_channel_name">notification_cancel!</string>
     <string name="btStartStop_start">START</string>
     <string name="btStartStop_stop">STOP</string>
-    <string name="btQuit">Quit</string>
-    <string name="bt_reload">RELOAD</string>
+    <string name="btReload">RELOAD</string>
+    <string name="btBG">CLOSE</string>
+    <string name="btFIN">FIN</string>
     <string name="notification_text">now get location info</string>
     <string name="notification_title">MyServiceSample</string>
     <string name="tvLat">北緯:</string>
     <string name="tvLon">東経:</string>
+    <string name="tvTitle">MyService</string>
 </resources>

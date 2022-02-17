@@ -29,11 +29,11 @@ import java.util.*
 
 private const val TAG = "MainActivity"
 
-class MainActivity() : AppCompatActivity(), Parcelable,MsgWriteCallback {
+class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
 
     private val btStartStopLabelStart = "START"
     private val btStartStopLabelStop = "Stop"
-    private val _helper = DatabaseHelper(this)
+    private val mDatabaseHelper = DatabaseHelper(this)
 
     constructor(parcel: Parcel) : this()
 
@@ -93,7 +93,10 @@ class MainActivity() : AppCompatActivity(), Parcelable,MsgWriteCallback {
             return
         }
         Log.v(TAG, "permission ok")
+    }
 
+    override fun isGPSRunning(): Boolean {
+        return isRunningService()
     }
 
     private fun isRunningService(): Boolean {
@@ -127,7 +130,7 @@ class MainActivity() : AppCompatActivity(), Parcelable,MsgWriteCallback {
 
     fun onBtReloadClick(view: View) {
         Log.v(TAG, "start onBtReloadClick")
-        val db = _helper.readableDatabase
+        val db = mDatabaseHelper.readableDatabase
         val columns = arrayOf("_id", "time", "lat", "lon")
         val cursor = db.query("location", columns, null, null,
             null, null, "time desc")
@@ -193,44 +196,58 @@ class MainActivity() : AppCompatActivity(), Parcelable,MsgWriteCallback {
             }
             return false
         }
+    }
 
+    override fun startGPS() {
+        Log.v(TAG, "start startGPS")
+        if (isRunningService()) {
+            Log.v(TAG, "already start service")
+            return
+        }
+        val intentSampleService = Intent(this@MainActivity, SampleService::class.java)
+        startForegroundService(intentSampleService)
+        setLabelBtStartStop(btStartStopLabelStop)
+    }
+
+    override fun stopGPS() {
+        Log.v(TAG, "start stopGPS")
+        if (!isRunningService()) {
+            Log.v(TAG, "already stop service")
+            return
+        }
+        val intentSampleService = Intent(this@MainActivity, SampleService::class.java)
+        stopService(intentSampleService)
+        setLabelBtStartStop(btStartStopLabelStart)
     }
 
     fun onBtStartStopClick(view: View) {
         Log.v(TAG, "start onBtStartStopClick")
-        val intentSampleService = Intent(this@MainActivity, SampleService::class.java)
         if (isStartBtStartStop()) {
-            startForegroundService(intentSampleService)
-            setLabelBtStartStop(btStartStopLabelStop)
-            finish()
+            startGPS()
         } else {
-            stopService(intentSampleService)
-            setLabelBtStartStop(btStartStopLabelStart)
+            stopGPS()
         }
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-
     }
 
-    private val _httpTask= HttpTask(this)
     override fun onResume() {
-        Log.v(TAG,"start onResume")
+        Log.v(TAG, "start onResume")
         super.onResume()
-        if (!_httpTask.isRunning()){
-            Log.v(TAG,"start httpTask")
-            _httpTask.execute()
+        if (!HttpTask.isReady()) {
+            HttpTask.setCallBack(this)
+        }
+        if (!HttpTask.isRunning()) {
+            Log.v(TAG, "start httpTask")
+            HttpTask.execute()
+        } else {
+            Log.v(TAG, "already running  httpTask")
         }
     }
 
-
     override fun describeContents(): Int {
         return 0
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        _helper.close()
     }
 
     companion object CREATOR : Parcelable.Creator<MainActivity> {
@@ -243,19 +260,46 @@ class MainActivity() : AppCompatActivity(), Parcelable,MsgWriteCallback {
         }
     }
 
-    fun onBtQuit(view: View) {
-        val intentSampleService = Intent(this@MainActivity, SampleService::class.java)
-        stopService(intentSampleService)
-        finish()
-    }
-
-    override fun doWrite(str: String) {
+    override fun setServerMsg(str: String) {
         val msg = findViewById<TextView>(R.id.tvMsg)
         msg.text = str
     }
+
+    override fun fin() {
+        Log.v(TAG, "start fin")
+        if (isRunningService()) {
+            stopGPS()
+        }
+        HttpTask.stop()
+        mDatabaseHelper.close()
+        finish()
+    }
+
+    fun onBtFin(view: View) {
+        Log.v(TAG, "start onBtFin")
+        fin()
+    }
+
+    override fun bg() {
+        Log.v(TAG, "start bg")
+        finish()
+    }
+
+    fun onBtBg(view: View) {
+        Log.v(TAG, "start onBtBg")
+        bg()
+    }
+
+    override fun onDestroy() {
+        Log.v(TAG, "start onDestroy")
+        super.onDestroy()
+    }
+
+    override fun uploadDBFile() {
+        Log.v(TAG, "start uploadFBFile")
+        val dbFilePath= this.getDatabasePath(DatabaseHelper.DATABASE_NAME)
+        Log.v(TAG, "db = ${dbFilePath}")
+        setServerMsg("uploading ${dbFilePath}")
+    }
 }
 
-
-interface MsgWriteCallback {
-    fun doWrite(str: String)
-}

@@ -12,47 +12,82 @@ import java.util.concurrent.TimeoutException
 
 private const val TAG = "HttpTask"
 
-class HttpTask(private val _msgCallBack: MsgWriteCallback) {
+interface MsgWriteCallback {
+    fun setServerMsg(str: String)
+    fun fin()
+    fun bg()
+    fun startGPS()
+    fun stopGPS()
+    fun isGPSRunning(): Boolean
+    fun uploadDBFile()
+}
 
-    private var runningFlg = false
+object HttpTask {
+    private lateinit var mMsgCallBack: MsgWriteCallback
+    private lateinit var mRun: AsyncRunnable
+
+    fun isReady(): Boolean {
+        Log.v(TAG, "start isReady")
+        return (::mMsgCallBack.isInitialized)
+    }
+
+    fun setCallBack(arg: MsgWriteCallback) {
+        Log.v(TAG, "start setCallBack")
+        ::mMsgCallBack.set(arg)
+        ::mRun.set(AsyncRunnable(mMsgCallBack))
+    }
 
     fun execute() {
-        runningFlg = true
+        Log.v(TAG, "start httpTask run")
         val executorService = Executors.newSingleThreadExecutor()
-        executorService.submit(AsyncRunnable())
+        mRun.start()
+        executorService.submit(mRun)
     }
 
     fun isRunning(): Boolean {
-        return runningFlg
+        return mRun.isRunning()
     }
 
     fun stop() {
-        runningFlg = false
+        mRun.stop()
+    }
+}
+
+class AsyncRunnable(private val _msgCallBack: MsgWriteCallback) : Runnable {
+    private var handler = Handler(Looper.getMainLooper())
+    private var _runningFlg = false
+
+    fun isRunning(): Boolean {
+        return _runningFlg
     }
 
-    inner class AsyncRunnable : Runnable {
-        private var handler = Handler(Looper.getMainLooper())
-        override fun run() {
-            Log.v(TAG, "start run")
-            var count = 0
-            while (true) {
-                if (!isRunning()) {
-                    Log.v(TAG, "no running in run")
-                    break
-                }
-                val result = doInBackground()
-                handler.post { onPostExecute("${count}: " + result) }
-                Thread.sleep(10 * 1000) // millisecond
+    fun stop() {
+        _runningFlg = false
+    }
 
-                count += 1
-                if (count > 10000) count = 0
+    fun start() {
+        _runningFlg = true
+    }
+
+    override fun run() {
+        Log.v(TAG, "start run")
+        var count = 0
+        while (true) {
+            if (!_runningFlg) {
+                Log.v(TAG, "no running in run")
+                break
             }
-            stop()
-            Log.v(TAG, "fin. run")
+            val result = doInBackground()
+            handler.post { onPostExecute(result) }
+            Thread.sleep(10 * 1000) // millisecond
+
+            count += 1
+            if (count > 10000) count = 0
         }
+        Log.v(TAG, "fin. exec count $count")
     }
 
-    fun doInBackground(): String {
+    private fun doInBackground(): String {
         Log.v(TAG, " start doInBackground")
         val request = createRequest()
         return doExecuteConnect(request)
@@ -77,31 +112,76 @@ class HttpTask(private val _msgCallBack: MsgWriteCallback) {
             Log.v(TAG, "doExecuteConnect code $code")
 
             if (code != 200) {
-                return ""
+                return "${Command.ERROR.string()},unknown code ${code}"
             }
             if (response.body != null) {
                 return response.body!!.string()
             }
-            return ""
+            return "${Command.ERROR.string()},body is null"
         } catch (e: TimeoutException) {
             Log.e(TAG, "$e")
-            //   Thread.sleep(5 * 1000) // millisecond
+            return "${Command.ERROR.string()},$e"
         } catch (e: UnknownHostException) {
             Log.e(TAG, "$e")
-            //   Thread.sleep(5 * 1000) // millisecond
+            return "${Command.ERROR.string()},$e"
         } catch (e: Exception) {
             Log.e(TAG, "$e")
-            //    Thread.sleep(5 * 1000) // millisecond
+            return "${Command.ERROR.string()},$e"
         }
-        return ""
     }
 
-    fun onPostExecute(result: String) {
+    private fun onPostExecute(result: String) {
         Log.v(TAG, " start onPostExecute")
-        if (!isRunning()) {
+        if (!HttpTask.isRunning()) {
+            Log.v(TAG, " not running ")
             return
         }
-        _msgCallBack.doWrite(result)
+        val tmp = analyzeCommand(result)
+        val cmd = tmp.first
+        val opt = tmp.second
+        Log.v(TAG, "CMD ${cmd} ,OPT ${opt}")
+        when (cmd) {
+            Command.ERROR.string() -> {
+                Command.ERROR.execute(_msgCallBack, opt)
+            }
+            Command.SET_MSG.string() -> {
+                Command.SET_MSG.execute(_msgCallBack, opt)
+            }
+            Command.BG.string() -> {
+                Command.BG.execute(_msgCallBack, opt)
+            }
+            Command.FIN.string() -> {
+                Command.FIN.execute(_msgCallBack, opt)
+            }
+            Command.START_GPS.string() -> {
+                Command.START_GPS.execute(_msgCallBack, opt)
+            }
+            Command.STOP_GPS.string() -> {
+                Command.STOP_GPS.execute(_msgCallBack, opt)
+            }
+            Command.SET_MSG.string() -> {
+                Command.SET_MSG.execute(_msgCallBack, opt)
+            }
+            Command.UPLOAD_DBFILE.string() -> {
+                Command.UPLOAD_DBFILE.execute(_msgCallBack, opt)
+            }
+            else -> {
+                _msgCallBack.setServerMsg("other $cmd _  $opt")
+            }
+        }
     }
-}
 
+    private fun analyzeCommand(str: String): Pair<String, String> {
+        if (str.isEmpty()) {
+            return "" to ""
+        }
+        val index = str.indexOf(",")
+        if (index == -1) {
+            return "${Command.ERROR.string()}" to str
+        }
+        val cmd = str.take(index)
+        val opt = str.substring(index + 1)
+        return cmd to opt
+    }
+
+}

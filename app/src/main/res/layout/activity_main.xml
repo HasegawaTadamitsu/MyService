@@ -11,21 +11,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="@string/app_name"
+        android:text="@string/tvTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/btQuit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:onClick="onBtQuit"
-        android:text="@string/btQuit"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/btReload"
-        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
     <Button
         android:id="@+id/btStartStop"
@@ -43,12 +31,35 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="4dp"
         android:onClick="onBtReloadClick"
-        android:text="@string/bt_reload"
-        app:layout_constraintEnd_toStartOf="@+id/btQuit"
+        android:text="@string/btReload"
+        app:layout_constraintEnd_toStartOf="@+id/btBG"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/btStartStop"
         app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
+    <Button
+        android:id="@+id/btBG"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:onClick="onBtBg"
+        android:text="@string/btBG"
+        app:layout_constraintEnd_toStartOf="@+id/btFIN"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btReload"
+        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
+
+    <Button
+        android:id="@+id/btFIN"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:onClick="onBtFin"
+        android:text="@string/btFIN"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btBG"
+        app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
     <TextView
         android:id="@+id/tvMsg"
