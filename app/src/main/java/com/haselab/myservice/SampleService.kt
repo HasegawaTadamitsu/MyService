@@ -67,6 +67,7 @@ class SampleService : Service() {
 
         db.setTransactionSuccessful()
         db.endTransaction()
+        db.close()
     }
 
     override fun onCreate() {

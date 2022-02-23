@@ -4,61 +4,76 @@ import android.util.Log
 
 private const val TAG = "Command"
 
+interface MsgWriteCallback {
+    fun setServerMsg(str: String): Boolean
+    fun fin(): Boolean
+    fun bg(): Boolean
+    fun startGPS(): Boolean
+    fun stopGPS(): Boolean
+    fun isGPSRunning(): Boolean
+    fun getDBFile(): String
+    fun getBatteryLevel(): Int
+    fun getLastLocate(): Location
+}
+
 enum class Command(val str: String) {
+    NO_COMMAND("NO_COMMAND") {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
+            return true
+        }
+    },
+    GET_BATTERY_LEVEL("GET_BATTERY_LEVEL") {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
+            return true
+        }
+    },
     FIN("FIN") {
-        override fun execute(callback: MsgWriteCallback, arg: String): String {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
             Log.v(TAG, "start execute FIN")
-            callback.fin()
-            return ""
+            return callback.fin()
         }
     },
     BG("BG") {
-        override fun execute(callback: MsgWriteCallback, arg: String): String {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
             Log.v(TAG, "start execute Background")
-            callback.bg()
-            return ""
+            return callback.bg()
         }
     },
     STOP_GPS("STOP_GPS") {
-        override fun execute(callback: MsgWriteCallback, arg: String): String {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
             Log.v(TAG, "start execute STOP_GPS")
-            callback.stopGPS()
-            return ""
+            return callback.stopGPS()
         }
     },
     START_GPS("START_GPS") {
-            override fun execute(callback: MsgWriteCallback, arg: String): String {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
             Log.v(TAG, "start execute START_GPS")
-            callback.startGPS()
-            return ""
+            return callback.startGPS()
         }
     },
     IS_RUNNING_GPS("IS_RUNNING_GPS") {
-        override fun execute(callback: MsgWriteCallback, arg: String): String {
-            Log.v(TAG, "start execute IS_RUNNING_GPS")
-            return callback.isGPSRunning().toString()
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
+            return true
         }
     },
     UPLOAD_DB_FILE("UPLOAD_DB_FILE") {
-        override fun execute(callback: MsgWriteCallback, arg: String): String {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
             Log.v(TAG, "start execute uploadDBFile")
-            return callback.uploadDBFile().toString()
+            return false
         }
     },
     SET_MSG("SET_MSG") {
-        override fun execute(callback: MsgWriteCallback, arg: String): String {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
             Log.v(TAG, "start execute SET_MSG")
-            callback.setServerMsg(arg)
-            return ""
+            return callback.setServerMsg(arg)
         }
     },
     ERROR("ERROR") {
-
-        override fun execute(callback: MsgWriteCallback, arg: String): String {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
             Log.v(TAG, "start execute ERROR")
-            callback.setServerMsg("ERROR ${arg}")
-            return ""
+            return callback.setServerMsg("ERROR arg")
         }
     };
-    abstract fun execute(callback: MsgWriteCallback, arg: String): String
+
+    abstract fun execute(callback: MsgWriteCallback, arg: String): Boolean
 }
