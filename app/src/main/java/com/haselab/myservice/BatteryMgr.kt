@@ -6,30 +6,31 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 
-class BatteryMgr (val _intentFilter:IntentFilter,val _context: Context ){
-    var _level       : Int    = 0
-    var _temperature : Int    = 0
-    var _voltage     : Int    = 0
+class BattertInfo(var level: Int, var temperature: Int, var voltage: Int)
+
+class BatteryMgr(val intentFilter: IntentFilter, val context: Context) {
+    var _battertInfo = BattertInfo(0, 0, 0)
 
     fun create() {
-        _intentFilter.addAction(Intent.ACTION_BATTERY_CHANGED)
-        _context.registerReceiver(BatteryServiceReceiver, _intentFilter)
+        intentFilter.addAction(Intent.ACTION_BATTERY_CHANGED)
+        context.registerReceiver(BatteryServiceReceiver, intentFilter)
     }
 
     private val BatteryServiceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_BATTERY_CHANGED){
-                _level       = intent.getIntExtra(BatteryManager.EXTRA_LEVEL,-1)
-                _temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE,-1)
-                _voltage     = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,-1)
+            if (intent.action == Intent.ACTION_BATTERY_CHANGED) {
+                _battertInfo.level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                _battertInfo.temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
+                _battertInfo.voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1)
             }
         }
     }
-    fun getValues():Triple<Int,Int,Int>{
-        return Triple(_level,_temperature,_voltage)
+
+    fun getValues(): BattertInfo {
+        return _battertInfo
     }
 
     fun destry() {
-        _context.unregisterReceiver(BatteryServiceReceiver)
+        context.unregisterReceiver(BatteryServiceReceiver)
     }
 }
