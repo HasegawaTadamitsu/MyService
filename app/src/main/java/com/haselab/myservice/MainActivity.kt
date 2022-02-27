@@ -88,7 +88,8 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
 
         if (ActivityCompat.checkSelfPermission(
                 this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.v(TAG, "error  permission")
             val permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -102,7 +103,7 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
     }
 
     override fun isGPSRunning(): Boolean {
-       return  isRunningService()
+        return isRunningService()
     }
 
     private fun isRunningService(): Boolean {
@@ -138,18 +139,22 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
         Log.v(TAG, "start onBtReloadClick")
         val db = mDatabaseHelper.readableDatabase
         val columns = arrayOf("_id", "time", "lat", "lon")
-        val cursor = db.query("location", columns, null, null,
-            null, null, "time desc")
+        val cursor = db.query(
+            "location", columns, null, null,
+            null, null, "time desc"
+        )
 
         val headers = arrayOf("_id", "time", "lat", "lon")
         val layouts = intArrayOf(R.id.id, R.id.time, R.id.lat, R.id.lon)
 
-        val adapter = SimpleCursorAdapter(this,
+        val adapter = SimpleCursorAdapter(
+            this,
             R.layout.row_main,
             cursor,
             headers,
             layouts,
-            SimpleCursorAdapter.FLAG_AUTO_REQUERY)
+            SimpleCursorAdapter.FLAG_AUTO_REQUERY
+        )
         val listView = findViewById<View>(R.id.lvLocation) as ListView
 
         listView.onItemClickListener = ListViewClicker()
@@ -216,7 +221,7 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
         return true
     }
 
-    override fun stopGPS() : Boolean {
+    override fun stopGPS(): Boolean {
         Log.v(TAG, "start stopGPS")
         if (!isRunningService()) {
             Log.v(TAG, "already stop service")
@@ -239,8 +244,9 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
 
     override fun getLastLocate(): Location {
         val db = mDatabaseHelper.readableDatabase
-        val columns = arrayOf( "_id","time", "lat", "lon")
-        val cursor = db.query("location",
+        val columns = arrayOf("_id", "time", "lat", "lon")
+        val cursor = db.query(
+            "location",
             columns,
             null,
             null,
@@ -250,17 +256,17 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
             "1"
         )
         cursor.moveToFirst()
-        val ixId=cursor.getColumnIndex("_id")
+        val ixId = cursor.getColumnIndex("_id")
         val id = cursor.getLong(ixId)
-        val ixTime=cursor.getColumnIndex("time")
+        val ixTime = cursor.getColumnIndex("time")
         val time = cursor.getLong(ixTime)
         val ixLat = cursor.getColumnIndex("lat")
-        val lat  = cursor.getDouble(ixLat)
+        val lat = cursor.getDouble(ixLat)
         val ixLon = cursor.getColumnIndex("lon")
-        val lon  = cursor.getDouble(ixLon)
+        val lon = cursor.getDouble(ixLon)
         cursor.close()
         db.close()
-        return  Location(id,time,lat, lon)
+        return Location(id, time, lat, lon)
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -270,7 +276,7 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
         Log.v(TAG, "start onResume")
         super.onResume()
         if (!HttpTask.isReady()) {
-            HttpTask.setInit(this,mDatabaseHelper.getUUDI())
+            HttpTask.setInit(this, mDatabaseHelper.getUUDI())
         }
         if (!HttpTask.isRunning()) {
             Log.v(TAG, "start httpTask")
@@ -293,8 +299,10 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
             return arrayOfNulls(size)
         }
     }
+
     val dtformat1 = DateTimeFormatter.ofPattern("yyyyMMdd HHmmss")
-    override fun setServerMsg(str: String) : Boolean{
+    @SuppressLint("SetTextI18n")
+    override fun setServerMsg(str: String): Boolean {
         val now = LocalDateTime.now()
         val dateStr = dtformat1.format(now)
         val msg = findViewById<TextView>(R.id.tvMsg)
@@ -333,16 +341,17 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
     override fun onDestroy() {
         Log.v(TAG, "start onDestroy")
         super.onDestroy()
+        mBatteryMgr.destroy()
     }
 
-    override fun getDBFile() : String {
+    override fun getDBFile(): String {
         Log.v(TAG, "start uploadFBFile")
-        val dbFilePath= this.getDatabasePath(DatabaseHelper.DATABASE_NAME)
+        val dbFilePath = this.getDatabasePath(DatabaseHelper.DATABASE_NAME)
         Log.v(TAG, "db = $dbFilePath")
         return dbFilePath.toString()
     }
 
-    override fun getBatteryLevel(): BattertInfo {
+    override fun getBatteryLevel(): BatteryInfo {
         Log.v(TAG, "start getBatteryLevel")
         return mBatteryMgr.getValues()
     }

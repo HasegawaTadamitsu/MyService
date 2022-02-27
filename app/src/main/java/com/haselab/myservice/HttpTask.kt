@@ -111,7 +111,8 @@ class AsyncRunnable(
             }
             Command.GET_BATTERY_LEVEL -> {
                 val info = _msgCallBack.getBatteryLevel()
-                val request = createIntResultRequest(seq, cmd, 30)
+                val json = info.json()
+                val request = createJSONResultRequest(seq, cmd, json)
                 sendResult(request)
             }
             Command.IS_RUNNING_GPS -> {
@@ -125,8 +126,8 @@ class AsyncRunnable(
         }
     }
 
-    var lastCompleteLocateId = 0L
-    var nextLocateId = 0L
+    private var lastCompleteLocateId = 0L
+    private var nextLocateId = 0L
 
     private fun initSendJSON(seq: Int): JSONObject {
         val locate = _msgCallBack.getLastLocate()
@@ -176,12 +177,15 @@ class AsyncRunnable(
             .build()
     }
 
-    private fun createIntResultRequest(seq: Int, cmd: Command, num: Int): Request {
-        Log.v(TAG, " start createIntResultRequest")
+    private fun createJSONResultRequest(seq: Int, cmd: Command, addJson: JSONObject): Request {
+        Log.v(TAG, " start createJSONResultRequest")
         val url = "http://www.haselab.com/ms/result.html"
         val json = initSendJSON(seq)
         json.put("cmd", cmd.str)
-        json.put("num", num)
+        addJson.keys().forEach { s: String ->
+            val data =addJson.get(s)
+            json.put(s,data)
+        }
         Log.v(TAG, "json $json")
 
         return Request.Builder()
