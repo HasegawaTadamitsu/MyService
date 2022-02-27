@@ -128,6 +128,8 @@ class AsyncRunnable(
 
     private var lastCompleteLocateId = 0L
     private var nextLocateId = 0L
+    private var lastBatterySendMillisSec = 0L
+    private var nextBatterySendMillisSec = 0L
 
     private fun initSendJSON(seq: Int): JSONObject {
         val locate = _msgCallBack.getLastLocate()
@@ -141,7 +143,17 @@ class AsyncRunnable(
             json.put("locate_lat", locate.lat)
             json.put("locate_lon", locate.lon)
             nextLocateId = locate.id
-      }
+        }
+
+        if (lastBatterySendMillisSec + 30 * 60 * 1000 < System.currentTimeMillis()) {
+            val info = _msgCallBack.getBatteryLevel()
+            val batJson = info.json()
+            batJson.keys().forEach { s: String ->
+                val data = batJson.get(s)
+                json.put(s, data)
+            }
+            nextBatterySendMillisSec = System.currentTimeMillis()
+        }
         return json
     }
 
@@ -183,8 +195,8 @@ class AsyncRunnable(
         val json = initSendJSON(seq)
         json.put("cmd", cmd.str)
         addJson.keys().forEach { s: String ->
-            val data =addJson.get(s)
-            json.put(s,data)
+            val data = addJson.get(s)
+            json.put(s, data)
         }
         Log.v(TAG, "json $json")
 
@@ -253,6 +265,7 @@ class AsyncRunnable(
                 return Pair(Command.ERROR, strMsg)
             }
             lastCompleteLocateId = nextLocateId
+            lastBatterySendMillisSec = nextBatterySendMillisSec
             if (response.body == null) {
                 val strMsg = "doExecuteConnect body is null"
                 Log.e(TAG, strMsg)
@@ -289,7 +302,9 @@ class AsyncRunnable(
                 Log.e(TAG, strMsg)
                 return Pair(false, strMsg)
             }
+
             lastCompleteLocateId = nextLocateId
+            lastBatterySendMillisSec = nextBatterySendMillisSec
 
             if (response.body == null) {
                 val strMsg = "sendResult body is null"
