@@ -12,7 +12,7 @@ interface MsgWriteCallback {
     fun stopGPS(): Boolean
     fun isGPSRunning(): Boolean
     fun getDBFile(): String
-    fun getBatteryLevel(): Int
+    fun getBatteryLevel(): BattertInfo
     fun getLastLocate(): Location
 }
 

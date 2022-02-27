@@ -14,8 +14,9 @@ import com.google.android.gms.location.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-
 private const val TAG = "Service"
+class Location(val id: Long, val time: Long, val lat: Double, val lon: Double) {
+}
 
 class SampleService : Service() {
     companion object {

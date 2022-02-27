@@ -36,6 +36,7 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
     private val btStartStopLabelStart = "START"
     private val btStartStopLabelStop = "Stop"
     private val mDatabaseHelper = DatabaseHelper(this)
+    private lateinit var mBatteryMgr: BatteryMgr
 
     constructor(parcel: Parcel) : this()
 
@@ -95,6 +96,9 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
             return
         }
         Log.v(TAG, "permission ok")
+
+        mBatteryMgr = BatteryMgr(this)
+        mBatteryMgr.initMgr()
     }
 
     override fun isGPSRunning(): Boolean {
@@ -338,9 +342,9 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
         return dbFilePath.toString()
     }
 
-    override fun getBatteryLevel(): Int {
+    override fun getBatteryLevel(): BattertInfo {
         Log.v(TAG, "start getBatteryLevel")
-        return 30
+        return mBatteryMgr.getValues()
     }
 }
 

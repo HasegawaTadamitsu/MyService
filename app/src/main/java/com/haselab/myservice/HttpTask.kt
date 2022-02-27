@@ -110,8 +110,8 @@ class AsyncRunnable(
                 sendResult(request)
             }
             Command.GET_BATTERY_LEVEL -> {
-                val number = _msgCallBack.getBatteryLevel()
-                val request = createIntResultRequest(seq, cmd, number)
+                val info = _msgCallBack.getBatteryLevel()
+                val request = createIntResultRequest(seq, cmd, 30)
                 sendResult(request)
             }
             Command.IS_RUNNING_GPS -> {
