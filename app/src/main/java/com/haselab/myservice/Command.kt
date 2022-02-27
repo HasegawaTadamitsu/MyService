@@ -56,6 +56,12 @@ enum class Command(val str: String) {
             return true
         }
     },
+    VIBRATE("VIBRATE") {
+        override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
+            VibrationMgr.single()
+            return true
+        }
+    },
     UPLOAD_DB_FILE("UPLOAD_DB_FILE") {
         override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
             Log.v(TAG, "start execute uploadDBFile")
