@@ -14,6 +14,8 @@ interface MsgWriteCallback {
     fun getDBFile(): String
     fun getBatteryLevel(): BatteryInfo
     fun getLastLocate(): Location
+    fun deleteLocate(id: Long)
+    fun vibrate()
 }
 
 enum class Command(val str: String) {
@@ -58,7 +60,7 @@ enum class Command(val str: String) {
     },
     VIBRATE("VIBRATE") {
         override fun execute(callback: MsgWriteCallback, arg: String): Boolean {
-            VibrationMgr.single()
+            callback.vibrate()
             return true
         }
     },

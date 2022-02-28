@@ -97,13 +97,13 @@ class AsyncRunnable(
     }
 
     private fun execGetCommand(seq: Int): Pair<Command, String> {
-        Log.v(TAG, " start execGetCommand $seq")
+        Log.v(TAG, " start execGetCommand seq=$seq")
         val request = createGetCommandRequest(seq)
         return doExecuteConnect(request)
     }
 
     private fun execSendResult(seq: Int, cmd: Command): Pair<Boolean, String> {
-        Log.v(TAG, " start execServerResult $seq")
+        Log.v(TAG, " start execSendResult seq=$seq, cmd=$cmd")
         return when (cmd) {
             Command.UPLOAD_DB_FILE -> {
                 val request = createUploadRequest(seq, cmd)
@@ -127,7 +127,6 @@ class AsyncRunnable(
     }
 
     private var lastCompleteLocateId = 0L
-    private var nextLocateId = 0L
     private var lastBatterySendMillisSec = 0L
     private var nextBatterySendMillisSec = 0L
 
@@ -137,13 +136,11 @@ class AsyncRunnable(
         json.put("seq", seq)
         json.put("send_time", System.currentTimeMillis())
         json.put("uuid", mUUID)
-        if (lastCompleteLocateId != locate.id) {
-            json.put("locate_id", locate.id)
+                json.put("locate_id", locate.id)
             json.put("locate_time", locate.time)
             json.put("locate_lat", locate.lat)
             json.put("locate_lon", locate.lon)
-            nextLocateId = locate.id
-        }
+            lastCompleteLocateId = locate.id
 
         if (lastBatterySendMillisSec + 30 * 60 * 1000 < System.currentTimeMillis()) {
             val info = _msgCallBack.getBatteryLevel()
@@ -262,13 +259,18 @@ class AsyncRunnable(
             if (code != 200) {
                 val strMsg = "doExecuteConnect unknown code $code"
                 Log.e(TAG, strMsg)
+                if ( response.body != null){
+                    response.body!!.close()
+                }
+                response.close()
                 return Pair(Command.ERROR, strMsg)
             }
-            lastCompleteLocateId = nextLocateId
+            _msgCallBack.deleteLocate( lastCompleteLocateId )
             lastBatterySendMillisSec = nextBatterySendMillisSec
             if (response.body == null) {
                 val strMsg = "doExecuteConnect body is null"
                 Log.e(TAG, strMsg)
+                response.close()
                 return Pair(Command.ERROR, strMsg)
             }
             val str = response.body!!.string()
@@ -300,15 +302,19 @@ class AsyncRunnable(
             if (code != 200) {
                 val strMsg = "sendResult unknown code $code"
                 Log.e(TAG, strMsg)
+                if ( response.body != null){
+                    response.body!!.close()
+                }
+                response.close()
                 return Pair(false, strMsg)
             }
-
-            lastCompleteLocateId = nextLocateId
+            _msgCallBack.deleteLocate( lastCompleteLocateId )
             lastBatterySendMillisSec = nextBatterySendMillisSec
 
             if (response.body == null) {
                 val strMsg = "sendResult body is null"
                 Log.e(TAG, strMsg)
+                response.close()
                 return Pair(false, strMsg)
             }
             val str = response.body!!.string()
@@ -331,11 +337,15 @@ class AsyncRunnable(
     }
 
     private fun execCommand(cmd: Command, resultMsg: String): Boolean {
-        Log.v(TAG, " start execCommand $cmd $resultMsg")
+        Log.v(TAG, " start execCommand cmd=$cmd resultMsg=$resultMsg")
         if (!HttpTask.isRunning()) {
             Log.v(TAG, " not running ")
             return false
         }
         return cmd.execute(_msgCallBack, resultMsg)
     }
+
+
+
+
 }

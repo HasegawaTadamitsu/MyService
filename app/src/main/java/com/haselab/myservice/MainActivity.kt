@@ -10,15 +10,14 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
-import android.os.Bundle
-import android.os.Parcel
-import android.os.Parcelable
+import android.os.*
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.Button
 import android.widget.ListView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -37,6 +36,7 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
     private val btStartStopLabelStop = "Stop"
     private val mDatabaseHelper = DatabaseHelper(this)
     private lateinit var mBatteryMgr: BatteryMgr
+    private lateinit var mVibrationMgr: VibrationMgr
 
     constructor(parcel: Parcel) : this()
 
@@ -100,6 +100,10 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
 
         mBatteryMgr = BatteryMgr(this)
         mBatteryMgr.initMgr()
+        mVibrationMgr =
+            VibrationMgr(this.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator)
+
+
     }
 
     override fun isGPSRunning(): Boolean {
@@ -269,6 +273,19 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
         return Location(id, time, lat, lon)
     }
 
+    override fun deleteLocate(id: Long) {
+        Log.v(TAG, "start deleteLocate $id")
+        val sql = "DELETE from location  where _id = ?"
+        val db = mDatabaseHelper.writableDatabase
+        db.beginTransaction()
+        val stmt = db.compileStatement(sql)
+        stmt.bindLong(1, id)
+        stmt.executeUpdateDelete()
+        db.setTransactionSuccessful()
+        db.endTransaction()
+        db.close()
+    }
+
     override fun writeToParcel(parcel: Parcel, flags: Int) {
     }
 
@@ -301,6 +318,7 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
     }
 
     val dtformat1 = DateTimeFormatter.ofPattern("yyyyMMdd HHmmss")
+
     @SuppressLint("SetTextI18n")
     override fun setServerMsg(str: String): Boolean {
         val now = LocalDateTime.now()
@@ -354,6 +372,12 @@ class MainActivity() : AppCompatActivity(), Parcelable, MsgWriteCallback {
     override fun getBatteryLevel(): BatteryInfo {
         Log.v(TAG, "start getBatteryLevel")
         return mBatteryMgr.getValues()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    override fun vibrate() {
+        Log.v(TAG, "start vibrate")
+        mVibrationMgr.single()
     }
 }
 
